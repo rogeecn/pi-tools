@@ -3,10 +3,9 @@ import { activityMonitor } from "./activity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
 import type { ExtractedContent, ExtractOptions } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const QUERIT_SEARCH_URL = "https://api.querit.ai/v1/search";
-const QUERIT_CONTENTS_URL = "https://api.querit.ai/v1/contents";
+const DEFAULT_QUERIT_BASE_URL = "https://api.querit.ai";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 const CONTENTS_TIMEOUT_MS = 60_000;
@@ -14,6 +13,11 @@ const MAX_CONTENT_URLS = 10;
 
 interface WebSearchConfig {
 	queritApiKey?: unknown;
+	queritBaseUrl?: unknown;
+}
+
+function apiUrl(path: "search" | "contents"): string {
+	return appendApiPath(resolveApiBaseUrl(loadConfig().queritBaseUrl, DEFAULT_QUERIT_BASE_URL, "queritBaseUrl"), `v1/${path}`);
 }
 
 interface QueritSearchResult {
@@ -320,7 +324,7 @@ async function fetchContentsBatch(
 ): Promise<QueritContentsResponse> {
 	const data = await queritJsonRequest<QueritContentsResponse>(
 		"Contents",
-		QUERIT_CONTENTS_URL,
+		apiUrl("contents"),
 		apiKey,
 		buildContentsBody(urls, options),
 		normalizeTimeoutMs(options.timeoutMs),
@@ -357,7 +361,7 @@ export async function searchWithQuerit(
 	try {
 		const data = await queritJsonRequest<QueritSearchResponse>(
 			"Search",
-			QUERIT_SEARCH_URL,
+			apiUrl("search"),
 			apiKey,
 			buildSearchBody(query, options),
 			SEARCH_TIMEOUT_MS,

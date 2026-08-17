@@ -3,14 +3,15 @@ import { activityMonitor } from "./activity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
 import type { ExtractedContent } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const JINA_SEARCH_BASE_URL = "https://s.jina.ai/";
+const DEFAULT_JINA_SEARCH_BASE_URL = "https://s.jina.ai";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 
 interface WebSearchConfig {
 	jinaApiKey?: unknown;
+	jinaSearchBaseUrl?: unknown;
 }
 
 interface JinaSearchItem {
@@ -110,7 +111,8 @@ function buildSearchRequest(query: string, options: JinaSearchOptions, numResult
 	const recency = options.recencyFilter ? ` published in the past ${options.recencyFilter}` : "";
 	const exclusions = filters.excludes.map((domain) => ` -site:${domain}`).join("");
 	const constrainedQuery = `${query.trim()}${exclusions}${recency}`.trim();
-	const url = new URL(encodeURIComponent(constrainedQuery), JINA_SEARCH_BASE_URL);
+	const baseUrl = resolveApiBaseUrl(loadConfig().jinaSearchBaseUrl, DEFAULT_JINA_SEARCH_BASE_URL, "jinaSearchBaseUrl");
+	const url = new URL(appendApiPath(baseUrl, encodeURIComponent(constrainedQuery)));
 	url.searchParams.set("count", String(numResults));
 	for (const domain of filters.includes) url.searchParams.append("site", domain);
 	return { url: url.toString(), filters };

@@ -2,9 +2,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { activityMonitor } from "./activity.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const BRIGHTDATA_API_URL = "https://api.brightdata.com/request";
+const DEFAULT_BRIGHTDATA_BASE_URL = "https://api.brightdata.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 
@@ -28,6 +28,7 @@ const RECENCY_TBS: Record<string, string> = {
 
 interface WebSearchConfig {
 	brightdataApiKey?: unknown;
+	brightdataBaseUrl?: unknown;
 	brightdataSerpZone?: unknown;
 }
 
@@ -493,7 +494,7 @@ export async function searchWithBrightData(query: string, options: BrightDataSea
 	const activityId = activityMonitor.logStart({ type: "api", query: searchQuery });
 	let response: Response;
 	try {
-		response = await fetch(BRIGHTDATA_API_URL, {
+		response = await fetch(appendApiPath(resolveApiBaseUrl(loadConfig().brightdataBaseUrl, DEFAULT_BRIGHTDATA_BASE_URL, "brightdataBaseUrl"), "request"), {
 			method: "POST",
 			headers: {
 				"Authorization": `Bearer ${apiKey}`,

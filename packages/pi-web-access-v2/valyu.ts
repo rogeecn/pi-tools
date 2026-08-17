@@ -3,9 +3,9 @@ import { activityMonitor } from "./activity.ts";
 import type { ExtractedContent } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const VALYU_SEARCH_URL = "https://api.valyu.ai/v1/search";
+const DEFAULT_VALYU_BASE_URL = "https://api.valyu.ai";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 const MAX_SNIPPET_CHARS = 2_500;
@@ -13,6 +13,7 @@ const MAX_CONTENT_CHARS = 4_000;
 
 interface WebSearchConfig {
 	valyuApiKey?: unknown;
+	valyuBaseUrl?: unknown;
 }
 
 interface ValyuResult {
@@ -146,7 +147,7 @@ export async function searchWithValyu(query: string, options: SearchOptions & { 
 	const activityId = activityMonitor.logStart({ type: "api", query });
 	let response: Response;
 	try {
-		response = await fetch(VALYU_SEARCH_URL, {
+		response = await fetch(appendApiPath(resolveApiBaseUrl(loadConfig().valyuBaseUrl, DEFAULT_VALYU_BASE_URL, "valyuBaseUrl"), "v1/search"), {
 			method: "POST",
 			headers: { "x-api-key": apiKey, "Content-Type": "application/json", Accept: "application/json" },
 			body: JSON.stringify({ query, max_num_results: numResults, ...mapDomainFilter(options.domainFilter), ...(startDate ? { start_date: startDate } : {}) }),

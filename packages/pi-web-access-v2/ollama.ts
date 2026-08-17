@@ -4,15 +4,19 @@ import type { ExtractedContent, ExtractOptions } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
 import { fetchRemoteUrl, loadFetchContentDomainPolicy, loadSsrfConfig, validateRemoteUrl, type Lookup, type SsrfConfig } from "./ssrf-protection.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const OLLAMA_SEARCH_URL = "https://ollama.com/api/web_search";
-const OLLAMA_FETCH_URL = "https://ollama.com/api/web_fetch";
+const DEFAULT_OLLAMA_BASE_URL = "https://ollama.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 
 interface WebSearchConfig {
 	ollamaApiKey?: unknown;
+	ollamaBaseUrl?: unknown;
+}
+
+function apiUrl(path: "web_search" | "web_fetch"): string {
+	return appendApiPath(resolveApiBaseUrl(loadConfig().ollamaBaseUrl, DEFAULT_OLLAMA_BASE_URL, "ollamaBaseUrl"), `api/${path}`);
 }
 
 interface OllamaSearchResult {
@@ -138,7 +142,7 @@ export async function searchWithOllama(query: string, options: OllamaSearchOptio
 	const activityId = activityMonitor.logStart({ type: "api", query });
 	let response: Response;
 	try {
-		response = await fetch(OLLAMA_SEARCH_URL, {
+		response = await fetch(apiUrl("web_search"), {
 			method: "POST",
 			headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
 			body: JSON.stringify({ query, max_results: numResults }),
@@ -199,7 +203,7 @@ export async function extractWithOllama(url: string, signal?: AbortSignal, optio
 	const activityId = activityMonitor.logStart({ type: "api", query: `ollama fetch: ${url}` });
 	let response: Response;
 	try {
-		response = await fetchRemoteUrl(OLLAMA_FETCH_URL, {
+		response = await fetchRemoteUrl(apiUrl("web_fetch"), {
 			method: "POST",
 			headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
 			body: JSON.stringify({ url }),

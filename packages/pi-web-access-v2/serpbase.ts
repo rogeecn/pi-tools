@@ -2,9 +2,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { activityMonitor } from "./activity.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const SERPBASE_API_URL = "https://api.serpbase.dev/google/search";
+const DEFAULT_SERPBASE_BASE_URL = "https://api.serpbase.dev";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 const RECENCY_TBS: Record<string, string> = {
@@ -16,6 +16,7 @@ const RECENCY_TBS: Record<string, string> = {
 
 interface WebSearchConfig {
 	serpbaseApiKey?: unknown;
+	serpbaseBaseUrl?: unknown;
 }
 
 interface SerpBaseOrganicResult {
@@ -176,7 +177,7 @@ export async function searchWithSerpBase(query: string, options: SearchOptions =
 	const apiKey = await requireApiKey(options.signal);
 	const numResults = normalizeCount(options.numResults);
 	const filters = parseDomainFilter(options.domainFilter);
-	const url = new URL(SERPBASE_API_URL);
+	const url = new URL(appendApiPath(resolveApiBaseUrl(loadConfig().serpbaseBaseUrl, DEFAULT_SERPBASE_BASE_URL, "serpbaseBaseUrl"), "google/search"));
 	url.searchParams.set("q", buildQuery(query, filters));
 	// SerpBase's Google Search endpoint authenticates with an `api_key` query parameter.
 	url.searchParams.set("api_key", apiKey);

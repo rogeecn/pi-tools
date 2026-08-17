@@ -3,9 +3,9 @@ import { activityMonitor } from "./activity.ts";
 import type { ExtractedContent } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const SERPDIVE_API_URL = "https://api.serpdive.com/v1/search";
+const DEFAULT_SERPDIVE_BASE_URL = "https://api.serpdive.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 
@@ -22,6 +22,7 @@ const DEFAULT_MODEL: SerpdiveModel = "krill";
 
 interface WebSearchConfig {
 	serpdiveApiKey?: unknown;
+	serpdiveBaseUrl?: unknown;
 	serpdiveModel?: unknown;
 }
 
@@ -249,7 +250,7 @@ export async function searchWithSerpdive(query: string, options: SerpdiveSearchO
 	const activityId = activityMonitor.logStart({ type: "api", query });
 	let response: Response;
 	try {
-		response = await fetch(SERPDIVE_API_URL, {
+		response = await fetch(appendApiPath(resolveApiBaseUrl(loadConfig().serpdiveBaseUrl, DEFAULT_SERPDIVE_BASE_URL, "serpdiveBaseUrl"), "v1/search"), {
 			method: "POST",
 			headers: {
 				"Authorization": `Bearer ${apiKey}`,

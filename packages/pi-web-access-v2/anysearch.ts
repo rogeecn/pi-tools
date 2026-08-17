@@ -3,14 +3,15 @@ import { activityMonitor } from "./activity.ts";
 import type { ExtractedContent } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const ANYSEARCH_API_URL = "https://api.anysearch.com/v1/search";
+const DEFAULT_ANYSEARCH_BASE_URL = "https://api.anysearch.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 30_000;
 
 interface WebSearchConfig {
 	anysearchApiKey?: unknown;
+	anysearchBaseUrl?: unknown;
 }
 
 interface AnySearchResult {
@@ -133,7 +134,7 @@ export async function searchWithAnySearch(query: string, options: AnySearchSearc
 	let response: Response;
 
 	try {
-		response = await fetch(ANYSEARCH_API_URL, {
+		response = await fetch(appendApiPath(resolveApiBaseUrl(loadConfig().anysearchBaseUrl, DEFAULT_ANYSEARCH_BASE_URL, "anysearchBaseUrl"), "v1/search"), {
 			method: "POST",
 			headers: {
 				...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
