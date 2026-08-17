@@ -1,0 +1,8 @@
+{
+  "name": "pi-tools-repo",
+  "private": true,
+  "description": "Monorepo for Pi extensions, skills, prompts, and themes.",
+  "workspaces": [
+    "packages/*"
+  ]
+}

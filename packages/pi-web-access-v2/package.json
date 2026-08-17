@@ -1,0 +1,69 @@
+{
+  "name": "pi-web-access-v2",
+  "version": "0.23.0",
+  "description": "Web search, URL fetching, GitHub repo cloning, PDF extraction, YouTube video understanding, and local video analysis for Pi coding agent. Supports OpenAI, Brave, Parallel, TinyFish, Search1API, Searchinfinity, Querit, Tavily, Firecrawl, Jina, SERPdive, Kagi, Ollama, AnySearch, Bright Data SERP, SerpBase, SearXNG, Exa, Perplexity, and Gemini.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:coverage": "node --test --test-reporter=dot --experimental-test-coverage --test-coverage-include='*.ts' --test-coverage-lines=65",
+    "typecheck": "tsc",
+    "audit:runtime": "npm audit --omit=dev --omit=peer"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "extension",
+    "web-search",
+    "tinyfish",
+    "search1api",
+    "searchinfinity",
+    "querit",
+    "perplexity",
+    "fetch",
+    "scraping"
+  ],
+  "author": "Nico Bailon",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogeecn/pi-tools.git",
+    "directory": "packages/pi-web-access-v2"
+  },
+  "bugs": {
+    "url": "https://github.com/rogeecn/pi-tools/issues"
+  },
+  "homepage": "https://github.com/rogeecn/pi-tools/tree/main/packages/pi-web-access-v2#readme",
+  "files": [
+    "*.ts",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "banner.png",
+    "pi-web-fetch-demo.mp4"
+  ],
+  "devDependencies": {
+    "@types/turndown": "^5.0.6",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "linkedom": "^0.16.0",
+    "p-limit": "^6.1.0",
+    "promise.try": "^2.0.1",
+    "turndown": "^7.2.0",
+    "typebox": "^1.1.38",
+    "unpdf": "^1.6.2",
+    "undici": "^8.9.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "video": "https://github.com/rogeecn/pi-tools/raw/refs/heads/main/packages/pi-web-access-v2/pi-web-fetch-demo.mp4"
+  }
+}
