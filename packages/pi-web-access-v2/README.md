@@ -76,6 +76,35 @@ Without these, video content analysis (transcripts, visual descriptions via Gemi
 
 Requires Pi v0.37.3+.
 
+## Publish to npm
+
+The package name is `pi-web-access-v2`. Before the first release, confirm that
+the name is still available:
+
+```bash
+npm view pi-web-access-v2 name version
+```
+
+An `E404` means no public package currently uses the name. From the repository
+root, authenticate, verify the package, and publish it publicly:
+
+```bash
+npm login
+npm whoami
+npm test --workspace pi-web-access-v2
+npm run typecheck --workspace pi-web-access-v2
+npm pack --dry-run --workspace pi-web-access-v2
+npm publish --workspace pi-web-access-v2
+```
+
+Complete npm's interactive two-factor authentication prompt if required. For
+later releases, bump the version first, then commit the updated manifest and
+lockfile:
+
+```bash
+npm version patch --workspace pi-web-access-v2 --no-git-tag-version
+```
+
 ## Quick Start
 
 ```typescript

@@ -32,6 +32,8 @@ test("packed installs include typebox without peer dependencies", async () => {
 
 		const packageRequire = createRequire(join(tempDir, "node_modules", "pi-web-access-v2", "package.json"));
 		const installedManifest = packageRequire("pi-web-access-v2/package.json");
+		assert.equal(installedManifest.name, "pi-web-access-v2");
+		assert.equal(installedManifest.publishConfig?.access, "public");
 		assert.equal(installedManifest.peerDependencies?.typebox, undefined);
 		assert.match(installedManifest.dependencies?.typebox, /^\^1\./);
 		assert.match(packageRequire.resolve("typebox").replaceAll("\\", "/"), /node_modules\/typebox\//);
