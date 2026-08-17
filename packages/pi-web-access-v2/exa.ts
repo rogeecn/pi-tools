@@ -3,17 +3,26 @@ import { activityMonitor } from "./activity.ts";
 import type { ExtractedContent } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const EXA_ANSWER_URL = "https://api.exa.ai/answer";
-const EXA_SEARCH_URL = "https://api.exa.ai/search";
-const EXA_MCP_URL = "https://mcp.exa.ai/mcp";
+const DEFAULT_EXA_BASE_URL = "https://api.exa.ai";
+const DEFAULT_EXA_MCP_BASE_URL = "https://mcp.exa.ai";
 const CONFIG_PATH = getWebSearchConfigPath();
 const EXA_MCP_ADVANCED_TOOL = "web_search_advanced_exa";
 const EXA_MCP_BASIC_TOOL = "web_search_exa";
 
 interface WebSearchConfig {
 	exaApiKey?: unknown;
+	exaBaseUrl?: unknown;
+	exaMcpBaseUrl?: unknown;
+}
+
+function exaApiUrl(path: "answer" | "search"): string {
+	return appendApiPath(resolveApiBaseUrl(loadConfig().exaBaseUrl, DEFAULT_EXA_BASE_URL, "exaBaseUrl"), path);
+}
+
+function exaMcpUrl(): string {
+	return appendApiPath(resolveApiBaseUrl(loadConfig().exaMcpBaseUrl, DEFAULT_EXA_MCP_BASE_URL, "exaMcpBaseUrl"), "mcp");
 }
 
 interface ExaAnswerResponse {
@@ -196,7 +205,7 @@ export async function callExaMcp(
 	args: Record<string, unknown>,
 	signal?: AbortSignal,
 ): Promise<string> {
-	const response = await fetch(`${EXA_MCP_URL}?tools=${toolName}`, {
+	const response = await fetch(`${exaMcpUrl()}?tools=${toolName}`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -456,7 +465,7 @@ export async function searchWithExa(query: string, options: ExaSearchOptions = {
 
 	try {
 		if (!useSearch) {
-			const response = await fetch(EXA_ANSWER_URL, {
+			const response = await fetch(exaApiUrl("answer"), {
 				method: "POST",
 				headers: exaApiHeaders(apiKey),
 				body: JSON.stringify({ query }),
@@ -476,7 +485,7 @@ export async function searchWithExa(query: string, options: ExaSearchOptions = {
 			};
 		}
 
-		const response = await fetch(EXA_SEARCH_URL, {
+		const response = await fetch(exaApiUrl("search"), {
 			method: "POST",
 			headers: exaApiHeaders(apiKey),
 			body: JSON.stringify({

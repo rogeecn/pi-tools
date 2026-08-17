@@ -22,7 +22,7 @@ import { extractWithBrightDataUnlocker, isBrightDataUnlockerAvailable } from "./
 import { isVideoFile, extractVideo, extractVideoFrame, getLocalVideoDuration } from "./video-extract.ts";
 import { appendDeclaredWebLinks, discoverDeclaredWebLinks, type DeclaredWebLink } from "./declared-web-links.ts";
 import { fetchRemoteUrl, loadFetchContentDomainPolicy, loadSsrfConfig, validateRemoteUrl, type DomainPolicy, type Lookup, type SsrfConfig } from "./ssrf-protection.ts";
-import { formatSeconds, getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, formatSeconds, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 import { isImageEnabled } from "./feature-config.ts";
 import { assertAuthFetchUrl, authFetchRedirectGuard, type AuthFetchProfile } from "./auth-fetch.ts";
 import { getBrowserCookiesForHosts, getLastBrowserCookieDiagnostic } from "./chrome-cookies.ts";
@@ -229,15 +229,30 @@ export interface ExtractOptions {
 	lookup?: Lookup;
 }
 
-const JINA_READER_BASE = "https://r.jina.ai/";
+const DEFAULT_JINA_READER_BASE_URL = "https://r.jina.ai";
 const JINA_TIMEOUT_MS = 30000;
+
+function getJinaReaderBaseUrl(): string {
+	if (!existsSync(WEB_SEARCH_CONFIG_PATH)) return DEFAULT_JINA_READER_BASE_URL;
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(readFileSync(WEB_SEARCH_CONFIG_PATH, "utf-8"));
+	} catch (err) {
+		const message = err instanceof Error ? err.message : String(err);
+		throw new Error(`Failed to parse ${WEB_SEARCH_CONFIG_PATH}: ${message}`);
+	}
+	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+		throw new Error(`Invalid config in ${WEB_SEARCH_CONFIG_PATH}: expected a JSON object`);
+	}
+	return resolveApiBaseUrl((parsed as Record<string, unknown>).jinaReaderBaseUrl, DEFAULT_JINA_READER_BASE_URL, "jinaReaderBaseUrl");
+}
 
 async function extractWithJinaReader(
 	url: string,
 	signal?: AbortSignal,
 	lookup?: Lookup,
 ): Promise<ExtractedContent | null> {
-	const jinaUrl = JINA_READER_BASE + url;
+	const jinaUrl = appendApiPath(getJinaReaderBaseUrl(), url);
 
 	const activityId = activityMonitor.logStart({ type: "api", query: `jina: ${url}` });
 

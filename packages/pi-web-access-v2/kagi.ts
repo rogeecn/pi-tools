@@ -4,15 +4,19 @@ import type { ExtractedContent, ExtractOptions } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
 import { fetchRemoteUrl, loadFetchContentDomainPolicy, loadSsrfConfig, validateRemoteUrl, type SsrfConfig } from "./ssrf-protection.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const KAGI_SEARCH_URL = "https://kagi.com/api/v1/search";
-const KAGI_EXTRACT_URL = "https://kagi.com/api/v1/extract";
+const DEFAULT_KAGI_BASE_URL = "https://kagi.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 
 interface WebSearchConfig {
 	kagiApiKey?: unknown;
+	kagiBaseUrl?: unknown;
+}
+
+function apiUrl(path: "search" | "extract"): string {
+	return appendApiPath(resolveApiBaseUrl(loadConfig().kagiBaseUrl, DEFAULT_KAGI_BASE_URL, "kagiBaseUrl"), `api/v1/${path}`);
 }
 
 interface KagiSearchOptions extends SearchOptions {
@@ -169,7 +173,7 @@ export async function searchWithKagi(query: string, options: KagiSearchOptions =
 	const activityId = activityMonitor.logStart({ type: "api", query });
 	let response: Response;
 	try {
-		response = await fetch(KAGI_SEARCH_URL, {
+		response = await fetch(apiUrl("search"), {
 			method: "POST",
 			headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", Accept: "application/json" },
 			body: JSON.stringify({ query, limit: numResults }),
@@ -226,7 +230,7 @@ export async function extractWithKagi(url: string, signal?: AbortSignal, options
 	const activityId = activityMonitor.logStart({ type: "api", query: `kagi extract: ${url}` });
 	let response: Response;
 	try {
-		response = await fetchRemoteUrl(KAGI_EXTRACT_URL, {
+		response = await fetchRemoteUrl(apiUrl("extract"), {
 			method: "POST",
 			headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", Accept: "application/json" },
 			body: JSON.stringify({ pages: [{ url }] }),

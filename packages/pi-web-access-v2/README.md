@@ -354,20 +354,42 @@ Config defaults to `~/.pi/web-search.json`, or `web-search.json` under `PI_CODIN
   "openaiApiKey": "sk-...",
   "openaiResponsesUrl": "https://gateway.example.com/v1/responses",
   "braveApiKey": "BSA_...",
+  "braveBaseUrl": "https://api.search.brave.com",
   "exaApiKey": "exa-...",
+  "exaBaseUrl": "https://api.exa.ai",
+  "exaMcpBaseUrl": "https://mcp.exa.ai",
   "parallelApiKey": "...",
+  "parallelBaseUrl": "https://api.parallel.ai",
   "tinyfishApiKey": "sk-tinyfish-...",
+  "tinyfishSearchBaseUrl": "https://api.search.tinyfish.ai",
+  "tinyfishFetchBaseUrl": "https://api.fetch.tinyfish.ai",
   "search1apiApiKey": "...",
+  "search1apiBaseUrl": "https://api.search1api.com",
+  "searchinfinityBaseUrl": "https://torchlight.byteintlapi.com",
+  "queritBaseUrl": "https://api.querit.ai",
   "tavilyApiKey": "tvly-...",
+  "tavilyBaseUrl": "https://api.tavily.com",
   "jinaApiKey": "$JINA_API_KEY",
+  "jinaSearchBaseUrl": "https://s.jina.ai",
+  "jinaReaderBaseUrl": "https://r.jina.ai",
   "serpdiveApiKey": "sd_live_...",
+  "serpdiveBaseUrl": "https://api.serpdive.com",
   "serpdiveModel": "krill",
   "kagiApiKey": "$KAGI_API_KEY",
+  "kagiBaseUrl": "https://kagi.com",
   "ollamaApiKey": "$OLLAMA_API_KEY",
+  "ollamaBaseUrl": "https://ollama.com",
   "valyuApiKey": "$VALYU_API_KEY",
+  "valyuBaseUrl": "https://api.valyu.ai",
   "serpbaseApiKey": "$SERPBASE_API_KEY",
+  "serpbaseBaseUrl": "https://api.serpbase.dev",
   "serperApiKey": "$SERPER_API_KEY",
+  "serperBaseUrl": "https://google.serper.dev",
+  "bochaBaseUrl": "https://api.bochaai.com",
+  "anysearchBaseUrl": "https://api.anysearch.com",
+  "xaiBaseUrl": "https://api.x.ai",
   "brightdataApiKey": "$BRIGHTDATA_API_KEY",
+  "brightdataBaseUrl": "https://api.brightdata.com",
   "brightdataSerpZone": "pi_serp",
   "searxngBaseUrl": "https://search.example.com",
   "searxngHeaders": {
@@ -461,6 +483,45 @@ Config defaults to `~/.pi/web-search.json`, or `web-search.json` under `PI_CODIN
 }
 ```
 
+### Provider API base URLs
+
+The following optional fields route provider requests through another compatible host. Omit them (or use an empty string) to preserve the built-in endpoint exactly.
+
+| Config field | Default | Appended endpoint paths |
+| --- | --- | --- |
+| `braveBaseUrl` | `https://api.search.brave.com` | `/res/v1/web/search` |
+| `exaBaseUrl` | `https://api.exa.ai` | `/answer`, `/search` |
+| `exaMcpBaseUrl` | `https://mcp.exa.ai` | `/mcp` |
+| `parallelBaseUrl` | `https://api.parallel.ai` | `/v1/search`, `/v1/extract` |
+| `jinaSearchBaseUrl` | `https://s.jina.ai` | `/<encoded-query>` |
+| `jinaReaderBaseUrl` | `https://r.jina.ai` | `/<target-url>` |
+| `tinyfishSearchBaseUrl` | `https://api.search.tinyfish.ai` | none |
+| `tinyfishFetchBaseUrl` | `https://api.fetch.tinyfish.ai` | none |
+| `search1apiBaseUrl` | `https://api.search1api.com` | `/search`, `/crawl` |
+| `searchinfinityBaseUrl` | `https://torchlight.byteintlapi.com` | `/search_api/web_search` |
+| `queritBaseUrl` | `https://api.querit.ai` | `/v1/search`, `/v1/contents` |
+| `tavilyBaseUrl` | `https://api.tavily.com` | `/search` |
+| `serpdiveBaseUrl` | `https://api.serpdive.com` | `/v1/search` |
+| `kagiBaseUrl` | `https://kagi.com` | `/api/v1/search`, `/api/v1/extract` |
+| `bochaBaseUrl` | `https://api.bochaai.com` | `/v1/web-search` |
+| `ollamaBaseUrl` | `https://ollama.com` | `/api/web_search`, `/api/web_fetch` |
+| `anysearchBaseUrl` | `https://api.anysearch.com` | `/v1/search` |
+| `xaiBaseUrl` | `https://api.x.ai` | `/v1/responses` |
+| `brightdataBaseUrl` | `https://api.brightdata.com` | `/request` for SERP and Web Unlocker |
+| `serpbaseBaseUrl` | `https://api.serpbase.dev` | `/google/search` |
+| `valyuBaseUrl` | `https://api.valyu.ai` | `/v1/search` |
+| `serperBaseUrl` | `https://google.serper.dev` | `/search` |
+
+For example:
+
+```json
+{
+  "parallelBaseUrl": "https://gateway.example.com/parallel"
+}
+```
+
+Base URLs must be absolute `http` or `https` URLs and cannot contain username/password credentials. Trailing slashes are ignored; a path such as `/parallel` is retained before the endpoint paths above.
+
 All provider API-key fields (`openaiApiKey`, `braveApiKey`, `parallelApiKey`, `tinyfishApiKey`, `search1apiApiKey`, `searchinfinityApiKey`, `queritApiKey`, `tavilyApiKey`, `jinaApiKey`, `serpdiveApiKey`, `kagiApiKey`, `bochaApiKey`, `ollamaApiKey`, `serpbaseApiKey`, `anysearchApiKey`, `xaiApiKey`, `brightdataApiKey`, `firecrawlApiKey`, `exaApiKey`, `perplexityApiKey`, `geminiApiKey`, `datalabApiKey`, and `cloudflareApiKey`) accept explicit credential sources. Use `$NAME` or `${NAME}` to read one named environment variable, or prefix a trusted local shell command with `!` to resolve one value at provider request time. Escape `$$` as a literal leading `$` and `$!` as a literal leading `!`:
 
 ```json
@@ -472,7 +533,7 @@ All provider API-key fields (`openaiApiKey`, `braveApiKey`, `parallelApiKey`, `t
 }
 ```
 
-This syntax applies to provider credentials only; other configuration fields are not interpolated. `firecrawlApiKey`, `kagiApiKey`, `ollamaApiKey`, `valyuApiKey`, `serpbaseApiKey`, `serperApiKey`, and `brightdataApiKey` use the same credential-source rules, while `firecrawlBaseUrl`, `firecrawlApiVersion`, `firecrawlFreshScrape`, `brightdataSerpZone`, and `brightdataUnlockerZone` are literal config values.
+This syntax applies to provider credentials only; other configuration fields are not interpolated. `firecrawlApiKey`, `kagiApiKey`, `ollamaApiKey`, `valyuApiKey`, `serpbaseApiKey`, `serperApiKey`, and `brightdataApiKey` use the same credential-source rules, while all Base URL fields, `firecrawlApiVersion`, `firecrawlFreshScrape`, `brightdataSerpZone`, and `brightdataUnlockerZone` are literal config values.
 
 A command source is not run while the extension loads or registers tools. Each selected provider request runs it again with a five-second timeout, a 16 KiB output limit, a minimized environment, and a one-line non-empty stdout requirement. Command text and stderr are omitted from errors. These commands are trusted local configuration, not a same-user process isolation boundary; use absolute executable paths and protect the config file. `OP_SESSION_*` variables are forwarded to trusted resolver commands so shell-local 1Password sessions can be reused without storing them in config. An explicit source overrides legacy provider environment variables and fails that provider locally rather than falling back with a stale credential. Direct Google Gemini API requests send the resolved key only in the `x-goog-api-key` header, never in the URL.
 
@@ -524,7 +585,7 @@ Successful provider answers are preserved separately while source URLs and inlin
 
 Setting `provider` is optional. In `auto` mode, Jina is tried after Firecrawl and before SERPdive. It can also be selected per request with `provider: "jina"`, included in provider arrays or `provider: "all"`, or placed in `searchRouting.providers`.
 
-Jina Search maps `numResults` to its bounded `count` parameter, sends included domains as `site` filters, and adds excluded domains and recency constraints to the search query. Without `includeContent`, it requests SERP metadata only. With `includeContent: true`, Jina visits matching pages and returns their Markdown inline, so requests can take longer and consume more Jina tokens. The fixed hosted endpoint is `https://s.jina.ai`; no custom endpoint is configured by this extension.
+Jina Search maps `numResults` to its bounded `count` parameter, sends included domains as `site` filters, and adds excluded domains and recency constraints to the search query. Without `includeContent`, it requests SERP metadata only. With `includeContent: true`, Jina visits matching pages and returns their Markdown inline, so requests can take longer and consume more Jina tokens. `jinaSearchBaseUrl` and `jinaReaderBaseUrl` override the Search and Reader hosts independently.
 
 ### TinyFish
 
@@ -541,7 +602,7 @@ Setting `provider` is optional. In `auto` mode, an available TinyFish provider i
 
 TinyFish Search supports the shared `numResults`, `recencyFilter`, and include/exclude `domainFilter` options. Requests above 10 results use TinyFish pagination. When `includeContent` is true, result URLs are sent to TinyFish Fetch in batches of up to 10 and returned as inline Markdown content. TinyFish Fetch is also used as a hosted `fetch_content` fallback after Jina Reader and before Search1API.
 
-The stable Search (`https://api.search.tinyfish.ai`) and Fetch (`https://api.fetch.tinyfish.ai`) endpoints are built in, so no base URL setting is required. TinyFish currently documents both APIs as credit-free, with Free-plan limits of 30 search requests per minute and 150 fetched URLs per minute; an API key is still required. See the [TinyFish Search reference](https://docs.tinyfish.ai/search-api/reference) and [TinyFish Fetch reference](https://docs.tinyfish.ai/fetch-api/reference).
+The stable Search (`https://api.search.tinyfish.ai`) and Fetch (`https://api.fetch.tinyfish.ai`) endpoints remain the defaults; `tinyfishSearchBaseUrl` and `tinyfishFetchBaseUrl` override them independently. TinyFish currently documents both APIs as credit-free, with Free-plan limits of 30 search requests per minute and 150 fetched URLs per minute; an API key is still required. See the [TinyFish Search reference](https://docs.tinyfish.ai/search-api/reference) and [TinyFish Fetch reference](https://docs.tinyfish.ai/fetch-api/reference).
 
 ### Search1API
 

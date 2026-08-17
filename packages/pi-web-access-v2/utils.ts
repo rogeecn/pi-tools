@@ -12,6 +12,30 @@ export function getWebSearchConfigPath(): string {
 	return join(getWebSearchConfigDir(), "web-search.json");
 }
 
+export function resolveApiBaseUrl(value: unknown, fallback: string, field: string): string {
+	if (value === undefined || value === null || (typeof value === "string" && value.trim() === "")) return fallback;
+	if (typeof value !== "string") {
+		throw new Error(`${field} in ${getWebSearchConfigPath()} must be an absolute http(s) URL without credentials`);
+	}
+	let url: URL;
+	try {
+		url = new URL(value.trim());
+	} catch {
+		throw new Error(`${field} in ${getWebSearchConfigPath()} must be an absolute http(s) URL without credentials`);
+	}
+	if ((url.protocol !== "http:" && url.protocol !== "https:") || url.username || url.password) {
+		throw new Error(`${field} in ${getWebSearchConfigPath()} must be an absolute http(s) URL without credentials`);
+	}
+	url.pathname = url.pathname.replace(/\/+$/, "");
+	url.search = "";
+	url.hash = "";
+	return url.toString().replace(/\/+$/, "");
+}
+
+export function appendApiPath(baseUrl: string, path: string): string {
+	return `${baseUrl.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
+}
+
 export interface CuratorNetworkConfig {
 	/** Whether remote access was opted into via curatorRemote. */
 	enabled: boolean;

@@ -3,16 +3,20 @@ import { activityMonitor } from "./activity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
 import type { ExtractedContent, ExtractOptions } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const SEARCH1API_SEARCH_URL = "https://api.search1api.com/search";
-const SEARCH1API_CRAWL_URL = "https://api.search1api.com/crawl";
+const DEFAULT_SEARCH1API_BASE_URL = "https://api.search1api.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 const CRAWL_TIMEOUT_MS = 60_000;
 
 interface WebSearchConfig {
 	search1apiApiKey?: unknown;
+	search1apiBaseUrl?: unknown;
+}
+
+function apiUrl(path: "search" | "crawl"): string {
+	return appendApiPath(resolveApiBaseUrl(loadConfig().search1apiBaseUrl, DEFAULT_SEARCH1API_BASE_URL, "search1apiBaseUrl"), path);
 }
 
 interface Search1APISearchResult {
@@ -231,7 +235,7 @@ export async function searchWithSearch1API(
 	try {
 		const data = await search1APIJsonRequest<Search1APISearchResponse>(
 			"Search",
-			SEARCH1API_SEARCH_URL,
+		apiUrl("search"),
 			apiKey,
 			buildSearchBody(query, options),
 			SEARCH_TIMEOUT_MS,
@@ -267,7 +271,7 @@ export async function extractWithSearch1API(
 	try {
 		const data = await search1APIJsonRequest<Search1APICrawlResponse>(
 			"Crawl",
-			SEARCH1API_CRAWL_URL,
+		apiUrl("crawl"),
 			apiKey,
 			{ url },
 			typeof options.timeoutMs === "number" && Number.isFinite(options.timeoutMs)

@@ -3,10 +3,10 @@ import { activityMonitor } from "./activity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
 import type { ExtractedContent, ExtractOptions } from "./extract.ts";
 import { validateRemoteUrl, type Lookup } from "./ssrf-protection.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
 const CONFIG_PATH = getWebSearchConfigPath();
-const BRIGHTDATA_REQUEST_URL = "https://api.brightdata.com/request";
+const DEFAULT_BRIGHTDATA_BASE_URL = "https://api.brightdata.com";
 const EXTRACT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_REDIRECTS = 5;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
@@ -23,6 +23,7 @@ export interface BrightDataExtractOptions extends Pick<ExtractOptions, "timeoutM
 
 interface BrightDataConfig {
 	brightdataApiKey?: unknown;
+	brightdataBaseUrl?: unknown;
 	brightdataUnlockerZone?: unknown;
 }
 
@@ -215,7 +216,7 @@ async function brightDataRequest(
 	};
 	const activityId = activityMonitor.logStart({ type: "fetch", url });
 	try {
-		const response = await fetchBrightDataApi(BRIGHTDATA_REQUEST_URL, {
+		const response = await fetchBrightDataApi(appendApiPath(resolveApiBaseUrl(loadConfig().brightdataBaseUrl, DEFAULT_BRIGHTDATA_BASE_URL, "brightdataBaseUrl"), "request"), {
 			method: "POST",
 			headers,
 			body: JSON.stringify(unlockerBody(url, zone)),

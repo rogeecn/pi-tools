@@ -2,15 +2,16 @@ import { existsSync, readFileSync } from "node:fs";
 import { activityMonitor } from "./activity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const SEARCHINFINITY_SEARCH_URL = "https://torchlight.byteintlapi.com/search_api/web_search";
+const DEFAULT_SEARCHINFINITY_BASE_URL = "https://torchlight.byteintlapi.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 // API Key authenticated requests time out server-side after 30 seconds.
 const SEARCH_TIMEOUT_MS = 30_000;
 
 interface WebSearchConfig {
 	searchinfinityApiKey?: unknown;
+	searchinfinityBaseUrl?: unknown;
 }
 
 interface SearchinfinityWebResult {
@@ -179,7 +180,7 @@ async function searchinfinityJsonRequest(
 ): Promise<SearchinfinitySearchResponse> {
 	let response: Response;
 	try {
-		response = await fetch(SEARCHINFINITY_SEARCH_URL, {
+		response = await fetch(appendApiPath(resolveApiBaseUrl(loadConfig().searchinfinityBaseUrl, DEFAULT_SEARCHINFINITY_BASE_URL, "searchinfinityBaseUrl"), "search_api/web_search"), {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${apiKey}`,

@@ -2,14 +2,15 @@ import { existsSync, readFileSync } from "node:fs";
 import { activityMonitor } from "./activity.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const BOCHA_SEARCH_URL = "https://api.bochaai.com/v1/web-search";
+const DEFAULT_BOCHA_BASE_URL = "https://api.bochaai.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 
 interface WebSearchConfig {
 	bochaApiKey?: unknown;
+	bochaBaseUrl?: unknown;
 }
 
 let cachedConfig: WebSearchConfig | null = null;
@@ -175,7 +176,7 @@ export async function searchWithBocha(query: string, options: SearchOptions = {}
 	const activityId = activityMonitor.logStart({ type: "api", query });
 	let response: Response;
 	try {
-		response = await fetch(BOCHA_SEARCH_URL, {
+		response = await fetch(appendApiPath(resolveApiBaseUrl(loadConfig().bochaBaseUrl, DEFAULT_BOCHA_BASE_URL, "bochaBaseUrl"), "v1/web-search"), {
 			method: "POST",
 			headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", Accept: "application/json" },
 			body: JSON.stringify({ query, count: numResults, freshness: mapFreshness(options.recencyFilter), summary: true }),

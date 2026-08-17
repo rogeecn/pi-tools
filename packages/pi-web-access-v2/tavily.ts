@@ -3,14 +3,15 @@ import { activityMonitor } from "./activity.ts";
 import type { ExtractedContent } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const TAVILY_API_URL = "https://api.tavily.com/search";
+const DEFAULT_TAVILY_BASE_URL = "https://api.tavily.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 
 interface WebSearchConfig {
 	tavilyApiKey?: unknown;
+	tavilyBaseUrl?: unknown;
 }
 
 interface TavilyResult {
@@ -167,7 +168,7 @@ export async function searchWithTavily(query: string, options: TavilySearchOptio
 	const activityId = activityMonitor.logStart({ type: "api", query });
 	let response: Response;
 	try {
-		response = await fetch(TAVILY_API_URL, {
+		response = await fetch(appendApiPath(resolveApiBaseUrl(loadConfig().tavilyBaseUrl, DEFAULT_TAVILY_BASE_URL, "tavilyBaseUrl"), "search"), {
 			method: "POST",
 			headers: {
 				"Authorization": `Bearer ${apiKey}`,

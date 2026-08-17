@@ -2,14 +2,15 @@ import { existsSync, readFileSync } from "node:fs";
 import { activityMonitor } from "./activity.ts";
 import type { SearchOptions, SearchResult, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const BRAVE_API_URL = "https://api.search.brave.com/res/v1/web/search";
+const DEFAULT_BRAVE_BASE_URL = "https://api.search.brave.com";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 30_000;
 
 interface WebSearchConfig {
 	braveApiKey?: unknown;
+	braveBaseUrl?: unknown;
 }
 
 interface NormalizedDomainFilters {
@@ -160,7 +161,8 @@ export async function searchWithBrave(
 	}
 
 	try {
-		const response = await fetch(`${BRAVE_API_URL}?${params.toString()}`, {
+		const apiUrl = appendApiPath(resolveApiBaseUrl(loadConfig().braveBaseUrl, DEFAULT_BRAVE_BASE_URL, "braveBaseUrl"), "res/v1/web/search");
+		const response = await fetch(`${apiUrl}?${params.toString()}`, {
 			method: "GET",
 			headers: {
 				"X-Subscription-Token": apiKey,

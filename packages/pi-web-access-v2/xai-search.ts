@@ -3,7 +3,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { activityMonitor } from "./activity.ts";
 import type { SearchOptions, SearchResponse, SearchResult } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
 // xAI's Agent Tools API: a hosted `web_search` tool on an OpenAI-compatible
 // Responses endpoint. The search runs inside xAI's own inference, so — unlike
@@ -22,7 +22,7 @@ import { getWebSearchConfigPath } from "./utils.ts";
 // cost the user their search. Sources come back in `web_search_call.action.sources`
 // without asking for them via `include`.
 
-const XAI_RESPONSES_URL = "https://api.x.ai/v1/responses";
+const DEFAULT_XAI_BASE_URL = "https://api.x.ai";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 
@@ -33,6 +33,7 @@ const AUTH_MODEL_CANDIDATES = ["grok-4.5", "grok-4.3", "grok-build-0.1"] as cons
 
 interface WebSearchConfig {
 	xaiApiKey?: unknown;
+	xaiBaseUrl?: unknown;
 	xaiSearchModel?: unknown;
 }
 
@@ -294,7 +295,7 @@ export async function searchWithXai(
 
 	const activityId = activityMonitor.logStart({ type: "api", query });
 	try {
-		const response = await fetch(XAI_RESPONSES_URL, {
+		const response = await fetch(appendApiPath(resolveApiBaseUrl(loadConfig().xaiBaseUrl, DEFAULT_XAI_BASE_URL, "xaiBaseUrl"), "v1/responses"), {
 			method: "POST",
 			headers: {
 				...toRequestHeaders(auth.headers),

@@ -3,10 +3,10 @@ import { activityMonitor } from "./activity.ts";
 import type { ExtractedContent, ExtractOptions } from "./extract.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const TINYFISH_SEARCH_URL = "https://api.search.tinyfish.ai";
-const TINYFISH_FETCH_URL = "https://api.fetch.tinyfish.ai";
+const DEFAULT_TINYFISH_SEARCH_BASE_URL = "https://api.search.tinyfish.ai";
+const DEFAULT_TINYFISH_FETCH_BASE_URL = "https://api.fetch.tinyfish.ai";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = 150_000;
@@ -15,6 +15,8 @@ const MAX_FETCH_PER_URL_TIMEOUT_MS = 110_000;
 
 interface WebSearchConfig {
 	tinyfishApiKey?: unknown;
+	tinyfishSearchBaseUrl?: unknown;
+	tinyfishFetchBaseUrl?: unknown;
 }
 
 interface TinyFishSearchResult {
@@ -166,7 +168,8 @@ function buildSearchUrl(query: string, options: SearchOptions, page: number): st
 	const recency = recencyMinutes(options.recencyFilter);
 	if (recency !== undefined) params.set("recency_minutes", String(recency));
 	if (page > 0) params.set("page", String(page));
-	return `${TINYFISH_SEARCH_URL}?${params.toString()}`;
+	const baseUrl = resolveApiBaseUrl(loadConfig().tinyfishSearchBaseUrl, DEFAULT_TINYFISH_SEARCH_BASE_URL, "tinyfishSearchBaseUrl");
+	return `${baseUrl}?${params.toString()}`;
 }
 
 async function tinyFishJsonRequest<T>(
@@ -287,7 +290,7 @@ async function fetchBatch(
 ): Promise<TinyFishFetchResponse> {
 	return tinyFishJsonRequest<TinyFishFetchResponse>(
 		"Fetch",
-		TINYFISH_FETCH_URL,
+		resolveApiBaseUrl(loadConfig().tinyfishFetchBaseUrl, DEFAULT_TINYFISH_FETCH_BASE_URL, "tinyfishFetchBaseUrl"),
 		apiKey,
 		{ method: "POST", body: JSON.stringify(fetchBody(urls, options)) },
 		FETCH_TIMEOUT_MS,

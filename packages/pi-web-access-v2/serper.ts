@@ -2,9 +2,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { activityMonitor } from "./activity.ts";
 import type { SearchOptions, SearchResponse } from "./perplexity.ts";
 import { hasCredentialSource, redactCredential, resolveCredential } from "./credential-source.ts";
-import { getWebSearchConfigPath } from "./utils.ts";
+import { appendApiPath, getWebSearchConfigPath, resolveApiBaseUrl } from "./utils.ts";
 
-const SERPER_SEARCH_URL = "https://google.serper.dev/search";
+const DEFAULT_SERPER_BASE_URL = "https://google.serper.dev";
 const CONFIG_PATH = getWebSearchConfigPath();
 const SEARCH_TIMEOUT_MS = 60_000;
 const RECENCY_TBS: Record<NonNullable<SearchOptions["recencyFilter"]>, string> = {
@@ -16,6 +16,7 @@ const RECENCY_TBS: Record<NonNullable<SearchOptions["recencyFilter"]>, string> =
 
 interface WebSearchConfig {
 	serperApiKey?: unknown;
+	serperBaseUrl?: unknown;
 }
 
 interface SerperResult {
@@ -159,7 +160,7 @@ export async function searchWithSerper(query: string, options: SearchOptions = {
 	const activityId = activityMonitor.logStart({ type: "api", query });
 	let response: Response;
 	try {
-		response = await fetch(SERPER_SEARCH_URL, {
+		response = await fetch(appendApiPath(resolveApiBaseUrl(loadConfig().serperBaseUrl, DEFAULT_SERPER_BASE_URL, "serperBaseUrl"), "search"), {
 			method: "POST",
 			headers: { "X-API-KEY": apiKey, "Content-Type": "application/json", Accept: "application/json" },
 			body: JSON.stringify({ q: buildQuery(query, filters), num: requestCount, ...(options.recencyFilter ? { tbs: RECENCY_TBS[options.recencyFilter] } : {}) }),
